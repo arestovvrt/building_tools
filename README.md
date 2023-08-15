@@ -1,2 +1,2 @@
-# building_tools
-Geek Brains Course
+# geekbrains-university
+My studies in GeekBrains
