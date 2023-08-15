@@ -1,5 +1,6 @@
 const { merge } = require("webpack-merge");
 const common = require("./webpack.common.config.js");
+const ImageMinimizerPlugin = require("image-minimizer-webpack-plugin");
 
 module.exports = merge(common, {
   mode: "production",
@@ -9,14 +10,24 @@ module.exports = merge(common, {
       // --- Images
       {
         test: /\.(png|jpe?g|gif|svg|webp|ico)$/i,
-        // Изображения инлайниться в код
-        type: "asset",
-      },
-      // --- Audio
-      {
-        test: /\.(mp3|flac|wav)$/i,
-        // Изображения инлайниться в код
-        type: "asset",
+        use: [
+          {
+            loader: ImageMinimizerPlugin.loader,
+            options: {
+              minimizer: {
+                implementation: ImageMinimizerPlugin.imageminMinify,
+                options: {
+                  plugins: [
+                    "imagemin-gifsicle",
+                    "imagemin-mozjpeg",
+                    "imagemin-pngquant",
+                    "imagemin-svgo",
+                  ],
+                },
+              },
+            },
+          },
+        ],
       },
     ],
   },

@@ -1,94 +1,43 @@
 import styles from "./styles.scss";
-import showAlert from "./js/messages";
-import { diffDates, diffToHtml } from "./js/datecalc";
-import timer from "./js/timer";
-import { Howl } from "howler";
+import { items } from "./js/items";
 
-/****************************** Calc Diff */
-const dateCalcForm = document.getElementById("datecalc");
-dateCalcForm.addEventListener("submit", handleCalcDates);
-
-function handleCalcDates(event) {
-  event.preventDefault();
-
-  let { firstDate, secondDate } = event.target.elements;
-  (firstDate = firstDate.value), (secondDate = secondDate.value);
-
-  if (firstDate && secondDate) {
-    const diff = diffDates(firstDate, secondDate);
-    return showAlert(diffToHtml(diff), "success", "beforeend", 2000);
-  } else
-    return showAlert(
-      "Для расчета промежутка необходимо заполнить оба поля",
-      "danger",
-      "afterbegin",
-      2000
-    );
-}
-
-/****************************** Timer */
-const timerForm = document.getElementById("timer");
-let timerId = null;
-const elemId = `timer_${new Date().getTime()}`;
-const sound = new Howl({
-  src: [require("./audio/cute_sound.mp3")],
-  onloaderror(id, err) {
-    console.warn("failed to load sound file:", { id, err });
-  },
-});
-
-timerForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  switch (e.submitter.id) {
-    case "startBtn":
-      if (timerId) {
-        return showAlert(
-          "Для повторного запуска необходимо остановить действующий таймер",
-          "danger",
-          "afterbegin",
-          2000
-        );
-      }
-
-      let { start } = e.target.elements;
-      if (start.value) {
-        const bodyEl = document.querySelector("body");
-        bodyEl.insertAdjacentHTML(
-          "beforeend",
-          `<div id="${elemId}" class="card mx-auto p-3" style="width: 18rem;"></div>`
-        );
-        const appendEl = document.querySelector("#" + elemId);
-
-        timer(start.value, function (id, value) {
-          if (!timerId) timerId = id;
-          if (value) {
-            appendEl.innerText = value;
-          } else {
-            clearInterval(id);
-            appendEl.remove();
-            timerId = null;
-            // Play the sound.
-            sound.play();
-          }
-        });
-      } else {
-        return showAlert(
-          "Для запуска таймера необходимо указать время",
-          "danger",
-          "afterbegin",
-          2000
-        );
-      }
+const showItem = (item) => {
+  console.log(item);
+  let innerEl;
+  switch (item.type) {
+    case "image":
+      innerEl = `<img src="${item.src}" class="card-img-top" alt="${item.title}"></img>`;
       break;
-    case "stopBtn":
-      clearInterval(timerId);
-      const removeEl = document.querySelector("#" + elemId);
-      if (removeEl) removeEl.remove();
-      timerId = null;
-
-      // Play the sound.
-      sound.play();
+    case "audio":
+      innerEl = `<figure>
+          <audio
+          controls
+          src="${item.src}">
+          </audio>
+        </figure>`;
+      break;
+    case "video":
+      innerEl = `<video controls>
+      <source src="${item.src}" type="video/mp4">
+      Sorry, your browser doesn't support embedded videos.
+    </video>`;
       break;
   }
+
+  return `
+    <div class="card" style="height: 300px;">
+      <div class="card-body ${styles.cardBody}">
+        ${innerEl}
+      </div>
+      <h5 class="card-title mt-2">${item.title}</h5>
+    </div>`;
+};
+
+const id = "gallery";
+const rootEl = `<div class="${styles.gallery} mt-4" id="${id}">`;
+document.querySelector("#container").insertAdjacentHTML("beforeend", rootEl);
+const galleryEl = document.querySelector(`#${id}`);
+
+items.forEach((el) => {
+  galleryEl.insertAdjacentHTML("beforeend", showItem(el));
 });

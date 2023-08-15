@@ -5,6 +5,8 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const BundleAnalyzerPlugin =
   require("webpack-bundle-analyzer").BundleAnalyzerPlugin;
 
+const buildDir = "build";
+
 const plugins = [
   new MiniCssExtractPlugin({
     filename: "[name].[contenthash].css",
@@ -13,7 +15,7 @@ const plugins = [
     template: "./src/index.html",
   }),
   new webpack.HotModuleReplacementPlugin(), // применять изменения только при горячей перезагрузке
-  new BundleAnalyzerPlugin(),
+  //new BundleAnalyzerPlugin(),
 ];
 
 const devServer = {
@@ -23,7 +25,7 @@ const devServer = {
   allowedHosts: "all",
   hot: true, // Включает автоматическую перезагрузку страницы при изменениях
   static: {
-    directory: path.resolve(__dirname, "./build"),
+    directory: path.resolve(__dirname, "..", buildDir),
   },
   port: 3000,
 };
@@ -33,11 +35,13 @@ module.exports = {
   plugins,
   entry: "./src/index.js",
   output: {
-    path: path.resolve(__dirname, "..", "build"),
+    path: path.resolve(__dirname, "..", buildDir),
     //publicPath tells to webpack-dev-server where to serve the bundle in memory
     publicPath: "/",
     filename: "bundle.js",
-    assetModuleFilename: "assets/[hash][ext][query]", // Все ассеты будут складываться в build/assets
+    // Все asset/resource будут складываться в build/assets,
+    // Если для них не указан путь в generator: {}
+    assetModuleFilename: "assets/[hash][ext][query]",
     clean: true,
   },
 
@@ -73,11 +77,29 @@ module.exports = {
         exclude: /node_modules/,
         loader: "babel-loader",
       },
-
+      // --- Images
+      {
+        test: /\.(png|jpe?g|gif|svg|webp|ico)$/i,
+        // Будут помещаться в build/assets
+        type: "asset/resource",
+        generator: {
+          filename: "assets/img/[name][ext][query]",
+        },
+      },
+      // --- Audio/video
+      {
+        test: /\.(mp[3|4]|flac|wav)$/i,
+        // Будут помещаться в build/assets
+        type: "asset/resource",
+        generator: {
+          filename: "assets/media/[name][ext][query]",
+        },
+      },
       // --- Fonts
       {
         test: /\.(woff2?|eot|ttf|otf)$/i,
-        type: "asset/resource",
+        // Шрифты инлайнятся в код
+        type: "asset/inline",
         generator: {
           filename: "[path][name][ext][query]",
         },
